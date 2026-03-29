@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FUSO MEA — Demand Planning Executive Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #0D1B2A;
+  --navy-mid: #1B2E45;
+  --navy-light: #243B55;
+  --red: #C0392B;
+  --red-bright: #E74C3C;
+  --gold: #F39C12;
+  --green: #27AE60;
+  --teal: #1ABC9C;
+  --blue-acc: #2980B9;
+  --muted: #7F8C8D;
+  --border: rgba(255,255,255,0.08);
+  --text: #ECF0F1;
+  --text-dim: #95A5A6;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'Inter', sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--navy);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ── HEADER ─────────────────────────────────────────────── */
+header {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%);
+  border-bottom: 2px solid var(--red);
+  padding: 24px 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo-block { display: flex; flex-direction: column; gap: 2px; }
+.logo-block .brand { font-size: 11px; letter-spacing: 3px; color: var(--red); text-transform: uppercase; }
+.logo-block h1 { font-size: 20px; font-weight: 700; letter-spacing: 0.5px; }
+.logo-block .sub { font-size: 11px; color: var(--text-dim); letter-spacing: 1px; }
+
+.header-meta {
+  text-align: right;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.8;
+}
+
+.header-meta .live-badge {
+  display: inline-block;
+  background: var(--green);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 10px;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+/* ── NAV ─────────────────────────────────────────────────── */
+nav {
+  background: var(--navy-mid);
+  border-bottom: 1px solid var(--border);
+  padding: 0 48px;
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+}
+nav a {
+  color: var(--text-dim);
+  text-decoration: none;
+  padding: 12px 20px;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+nav a:hover, nav a.active {
+  color: var(--text);
+  border-bottom-color: var(--red);
+}
+
+/* ── MAIN ────────────────────────────────────────────────── */
+main { max-width: 1400px; margin: 0 auto; padding: 32px 48px 80px; }
+
+/* ── SECTION HEADER ────────────────────────────────────────*/
+.section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 48px 0 24px;
+}
+.section-header h2 {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--red);
+}
+.section-header .line {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.section-header .tag {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+/* ── KPI CARDS ──────────────────────────────────────────── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.kpi-card {
+  background: var(--navy-mid);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px 24px;
+  position: relative;
+  overflow: hidden;
+}
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.kpi-card.red::before { background: var(--red); }
+.kpi-card.gold::before { background: var(--gold); }
+.kpi-card.green::before { background: var(--green); }
+.kpi-card.teal::before { background: var(--teal); }
+
+.kpi-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+.kpi-value {
+  font-family: var(--mono);
+  font-size: 36px;
+  font-weight: 600;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.kpi-card.red .kpi-value { color: var(--red-bright); }
+.kpi-card.gold .kpi-value { color: var(--gold); }
+.kpi-card.green .kpi-value { color: var(--green); }
+.kpi-card.teal .kpi-value { color: var(--teal); }
+
+.kpi-delta {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.kpi-delta span.target { color: var(--green); font-weight: 600; }
+.kpi-delta span.gap { color: var(--gold); }
+
+/* ── PROGRESS BAR ───────────────────────────────────────── */
+.progress-track {
+  background: rgba(255,255,255,0.08);
+  border-radius: 4px;
+  height: 6px;
+  margin-top: 12px;
+  overflow: hidden;
+}
+.progress-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 1.2s ease;
+}
+
+/* ── ABC-XYZ MATRIX ─────────────────────────────────────── */
+.matrix-container {
+  background: var(--navy-mid);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 32px;
+}
+
+.matrix-intro {
+  margin-bottom: 24px;
+}
+.matrix-intro p {
+  color: var(--text-dim);
+  font-size: 13px;
+  max-width: 800px;
+  line-height: 1.8;
+}
+
+.matrix-wrapper {
+  display: grid;
+  grid-template-columns: 40px 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr 40px;
+  gap: 4px;
+  height: 360px;
+}
+
+.matrix-cell {
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.25s;
+  position: relative;
+  overflow: hidden;
+}
+.matrix-cell:hover { transform: scale(1.02); z-index: 10; }
+
+.matrix-cell .cell-label {
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 600;
+}
+.matrix-cell .cell-count {
+  font-family: var(--mono);
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1;
+}
+.matrix-cell .cell-count span {
+  font-size: 11px;
+  font-weight: 400;
+  opacity: 0.7;
+}
+.matrix-cell .cell-strategy {
+  font-size: 10px;
+  opacity: 0.8;
+  line-height: 1.4;
+}
+
+/* AX — highest priority */
+.cell-AX { background: linear-gradient(135deg, #1a4a2e, #27AE60); border: 1px solid #27AE60; }
+.cell-AY { background: linear-gradient(135deg, #1a3a4a, #2980B9); border: 1px solid #2980B9; }
+.cell-AZ { background: linear-gradient(135deg, #3a2a1a, #E67E22); border: 1px solid #E67E22; }
+.cell-BX { background: linear-gradient(135deg, #1a3530, #1ABC9C); border: 1px solid #1ABC9C; }
+.cell-BY { background: linear-gradient(135deg, #1e2a3a, #3498DB); border: 1px solid #3498DB; opacity: 0.9; }
+.cell-BZ { background: linear-gradient(135deg, #2e2010, #D35400); border: 1px solid #D35400; opacity: 0.85; }
+.cell-CX { background: linear-gradient(135deg, #1a2a1a, #2ECC71); border: 1px solid #2ECC71; opacity: 0.6; }
+.cell-CY { background: linear-gradient(135deg, #1a1e2a, #5D8AA8); border: 1px solid #5D8AA8; opacity: 0.6; }
+.cell-CZ { background: linear-gradient(135deg, #2a1a1a, #922B21); border: 1px solid #922B21; }
+
+.matrix-y-label, .matrix-x-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+}
+.matrix-y-label { writing-mode: vertical-rl; text-orientation: mixed; }
+.matrix-x-label { border-top: 1px solid var(--border); }
+
+.matrix-axis-title {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  text-align: center;
+  margin-top: 12px;
+}
+
+/* ── SEGMENTATION FORECASTING ───────────────────────────── */
+.forecast-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.forecast-card {
+  background: var(--navy-mid);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+}
+.forecast-card .fc-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.fc-badge {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+.fc-badge.ax { background: rgba(39,174,96,0.2); color: #27AE60; border: 1px solid #27AE60; }
+.fc-badge.az { background: rgba(230,126,34,0.2); color: #E67E22; border: 1px solid #E67E22; }
+.fc-badge.cz { background: rgba(146,43,33,0.2); color: #E74C3C; border: 1px solid #E74C3C; }
+.fc-badge.bx { background: rgba(26,188,156,0.2); color: #1ABC9C; border: 1px solid #1ABC9C; }
+.fc-badge.ecanter { background: rgba(155,89,182,0.2); color: #9B59B6; border: 1px solid #9B59B6; }
+.fc-badge.gpc { background: rgba(52,152,219,0.2); color: #3498DB; border: 1px solid #3498DB; }
+
+.fc-method {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+}
+.fc-description {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.7;
+  margin-bottom: 12px;
+}
+.fc-formula {
+  font-family: var(--mono);
+  font-size: 10px;
+  background: rgba(0,0,0,0.3);
+  border-left: 3px solid var(--red);
+  padding: 8px 12px;
+  border-radius: 0 4px 4px 0;
+  color: #A9D1F7;
+  line-height: 1.6;
+}
+
+/* ── SUPPLY CHAIN MAP ───────────────────────────────────── */
+.supply-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.supply-card {
+  background: var(--navy-mid);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+}
+.supply-card .flag { font-size: 28px; margin-bottom: 8px; }
+.supply-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+.supply-card .lt { font-family: var(--mono); font-size: 28px; color: var(--teal); margin: 8px 0; }
+.supply-card .lt span { font-size: 12px; color: var(--text-dim); }
+.supply-card p { font-size: 11px; color: var(--text-dim); line-height: 1.6; }
+.supply-card .ss-note {
+  margin-top: 10px;
+  font-family: var(--mono);
+  font-size: 10px;
+  background: rgba(0,0,0,0.3);
+  padding: 6px 10px;
+  border-radius: 4px;
+  color: var(--gold);
+}
+
+/* ── SMOB ────────────────────────────────────────────────── */
+.smob-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.smob-visual {
+  background: var(--navy-mid);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px;
+}
+.smob-visual h3 {
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 20px;
+}
+
+.smob-bar-item {
+  margin-bottom: 16px;
+}
+.smob-bar-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+.smob-bar-header .year { font-weight: 600; }
+.smob-bar-header .val { font-family: var(--mono); }
+
+/* ── ROADMAP ─────────────────────────────────────────────── */
+.roadmap-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.roadmap-card {
+  background: var(--navy-mid);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px;
+}
+.roadmap-card .year-badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-bottom: 12px;
+}
+.roadmap-card.y1 .year-badge { background: rgba(231,76,60,0.15); color: var(--red-bright); border: 1px solid var(--red-bright); }
+.roadmap-card.y2 .year-badge { background: rgba(243,156,18,0.15); color: var(--gold); border: 1px solid var(--gold); }
+.roadmap-card.y3 .year-badge { background: rgba(39,174,96,0.15); color: var(--green); border: 1px solid var(--green); }
+
+.roadmap-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.roadmap-card .targets {
+  display: flex;
+  gap: 16px;
+  margin: 12px 0 16px;
+}
+.roadmap-card .target-item {
+  font-family: var(--mono);
+  text-align: center;
+}
+.roadmap-card .target-item .t-val { font-size: 22px; font-weight: 600; }
+.roadmap-card.y1 .target-item .t-val { color: var(--red-bright); }
+.roadmap-card.y2 .target-item .t-val { color: var(--gold); }
+.roadmap-card.y3 .target-item .t-val { color: var(--green); }
+.roadmap-card .target-item .t-label { font-size: 9px; color: var(--text-dim); letter-spacing: 1px; }
+
+.roadmap-card ul { list-style: none; }
+.roadmap-card ul li {
+  font-size: 11px;
+  color: var(--text-dim);
+  padding: 5px 0 5px 14px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  line-height: 1.5;
+}
+.roadmap-card ul li::before {
+  content: '›';
+  position: absolute;
+  left: 0;
+  color: var(--red);
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+/* ── CHARTS ──────────────────────────────────────────────── */
+.charts-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+}
+.chart-card {
+  background: var(--navy-mid);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px;
+}
+.chart-card h3 {
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 20px;
+}
+.chart-container { position: relative; }
+
+/* ── SKU TABLE ───────────────────────────────────────────── */
+.sku-table-wrap {
+  background: var(--navy-mid);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.table-toolbar {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+.table-toolbar h3 {
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.filter-group { display: flex; gap: 8px; }
+.filter-btn {
+  font-size: 10px;
+  padding: 4px 12px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.5px;
+  font-family: var(--mono);
+}
+.filter-btn.active, .filter-btn:hover {
+  background: var(--red);
+  border-color: var(--red);
+  color: white;
+}
+
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  background: rgba(0,0,0,0.3);
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  font-weight: 600;
+  white-space: nowrap;
+}
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+tbody tr:hover { background: rgba(255,255,255,0.03); }
+tbody td {
+  padding: 10px 14px;
+  font-size: 12px;
+  vertical-align: middle;
+}
+.badge {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 3px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+}
+.badge-A { background: rgba(39,174,96,0.2); color: #27AE60; border: 1px solid #27AE60; }
+.badge-B { background: rgba(52,152,219,0.2); color: #3498DB; border: 1px solid #3498DB; }
+.badge-C { background: rgba(127,140,141,0.2); color: #95A5A6; border: 1px solid #95A5A6; }
+.badge-X { background: rgba(26,188,156,0.15); color: #1ABC9C; }
+.badge-Y { background: rgba(243,156,18,0.15); color: #F39C12; }
+.badge-Z { background: rgba(231,76,60,0.15); color: #E74C3C; }
+.badge-smob { background: rgba(192,57,43,0.2); color: #E74C3C; border: 1px solid #E74C3C; }
+
+.mono-val { font-family: var(--mono); }
+
+/* ── FOOTER ──────────────────────────────────────────────── */
+footer {
+  background: var(--navy-mid);
+  border-top: 1px solid var(--border);
+  padding: 20px 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+footer .credits {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+}
+footer .disclaimer {
+  font-size: 10px;
+  color: rgba(127,140,141,0.5);
+}
+
+/* ── LOADING ─────────────────────────────────────────────── */
+#loading {
+  position: fixed;
+  inset: 0;
+  background: var(--navy);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.spinner {
+  width: 40px; height: 40px;
+  border: 3px solid var(--border);
+  border-top-color: var(--red);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+#loading p { margin-top: 16px; font-family: var(--mono); font-size: 12px; color: var(--text-dim); }
+
+/* ── TOOLTIP CUSTOM ─────────────────────────────────────── */
+.cell-tooltip {
+  position: fixed;
+  background: rgba(13,27,42,0.97);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 11px;
+  pointer-events: none;
+  z-index: 200;
+  display: none;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  max-width: 240px;
+}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <p>LOADING DASHBOARD DATA...</p>
+</div>
+
+<header>
+  <div class="logo-block">
+    <span class="brand">DSV Logistics × Mitsubishi FUSO</span>
+    <h1>Demand Planning Executive Dashboard</h1>
+    <span class="sub">JAFZA FREE ZONE, DUBAI — MEA DISTRIBUTION HUB</span>
+  </div>
+  <div class="header-meta">
+    <div><span class="live-badge">LIVE</span></div>
+    <div id="last-updated">—</div>
+    <div>58 MEA Markets · Japan / Chennai / Germany</div>
+    <div>Source: FUSO_Advanced_Model_v2.xlsx</div>
+  </div>
+</header>
+
+<nav>
+  <a href="#kpis" class="active">KPIs</a>
+  <a href="#abcxyz">ABC-XYZ Matrix</a>
+  <a href="#forecast">Segmentation Forecast</a>
+  <a href="#supply">Supply Chain</a>
+  <a href="#smob">SMOB Reduction</a>
+  <a href="#roadmap">3-Year Roadmap</a>
+  <a href="#skus">SKU Portfolio</a>
+</nav>
+
+<main>
+
+  <!-- ── KPIs ─────────────────────────────────────── -->
+  <div class="section-header" id="kpis">
+    <h2>Executive KPIs</h2>
+    <div class="line"></div>
+    <span class="tag">CURRENT STATE vs TARGET</span>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card red">
+      <div class="kpi-label">Forecast Accuracy</div>
+      <div class="kpi-value" id="kpi-fa">—</div>
+      <div class="kpi-delta">Target <span class="target" id="kpi-fa-target">—</span> · Gap <span class="gap" id="kpi-fa-gap">—</span></div>
+      <div class="progress-track"><div class="progress-bar" id="pb-fa" style="background:var(--red-bright);width:0"></div></div>
+    </div>
+    <div class="kpi-card gold">
+      <div class="kpi-label">Fill Rate</div>
+      <div class="kpi-value" id="kpi-fr">—</div>
+      <div class="kpi-delta">Target <span class="target" id="kpi-fr-target">—</span> · Gap <span class="gap" id="kpi-fr-gap">—</span></div>
+      <div class="progress-track"><div class="progress-bar" id="pb-fr" style="background:var(--gold);width:0"></div></div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-label">Obsolete Inventory (SMOB)</div>
+      <div class="kpi-value" id="kpi-smob">—</div>
+      <div class="kpi-delta">Target <span class="target" id="kpi-smob-target">—</span> · <span class="gap" id="kpi-smob-aed">—</span> locked</div>
+      <div class="progress-track"><div class="progress-bar" id="pb-smob" style="background:var(--red-bright);width:0"></div></div>
+    </div>
+    <div class="kpi-card teal">
+      <div class="kpi-label">Total Portfolio</div>
+      <div class="kpi-value" id="kpi-portfolio">—</div>
+      <div class="kpi-delta"><span id="kpi-skus">—</span> SKUs · <span id="kpi-markets">—</span> markets</div>
+      <div class="progress-track"><div class="progress-bar" id="pb-port" style="background:var(--teal);width:80"></div></div>
+    </div>
+  </div>
+
+  <!-- ── ABC-XYZ MATRIX ─────────────────────────── -->
+  <div class="section-header" id="abcxyz">
+    <h2>ABC-XYZ Segmentation Matrix</h2>
+    <div class="line"></div>
+    <span class="tag">DEMAND VALUE × DEMAND VARIABILITY</span>
+  </div>
+
+  <div class="matrix-container">
+    <div class="matrix-intro">
+      <p>
+        <strong>ABC</strong> classifies SKUs by annual demand value (A = top 70% of value, B = next 20%, C = bottom 10%).
+        <strong>XYZ</strong> classifies by demand variability using the Coefficient of Variation (CV = σ/μ).
+        The combined 9-cell matrix determines replenishment strategy, safety stock model, and forecasting method for each part.
+        <strong>AX</strong> parts receive continuous automated replenishment. <strong>CZ</strong> parts are prime SMOB candidates.
+      </p>
+    </div>
+
+    <div style="display:flex; gap:48px; align-items:flex-start;">
+      <div>
+        <div style="display:flex; gap:8px; margin-bottom:8px;">
+          <div style="width:40px; font-size:10px; color:var(--text-dim); display:flex; align-items:flex-end; padding-bottom:4px; writing-mode:vertical-rl; transform:rotate(180deg); letter-spacing:1px;">← ABC (Value)</div>
+          <div>
+            <div style="display:flex; gap:8px; margin-bottom:4px; padding-left:0;">
+              <div style="width:130px; text-align:center; font-size:10px; color:var(--text-dim); letter-spacing:1px;">X (Stable)</div>
+              <div style="width:130px; text-align:center; font-size:10px; color:var(--text-dim); letter-spacing:1px;">Y (Variable)</div>
+              <div style="width:130px; text-align:center; font-size:10px; color:var(--text-dim); letter-spacing:1px;">Z (Intermittent)</div>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(3,130px); grid-template-rows:repeat(3,110px); gap:4px;" id="matrix-grid">
+              <!-- filled by JS -->
+            </div>
+            <div style="text-align:center; margin-top:8px; font-size:10px; color:var(--text-dim); letter-spacing:2px;">XYZ (Variability) →</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="flex:1;">
+        <div style="font-size:11px; color:var(--text-dim); letter-spacing:1px; margin-bottom:12px;">PORTFOLIO DISTRIBUTION</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;" id="chart-pair">
+          <div class="chart-card" style="padding:16px;">
+            <h3>SKU Count by ABC</h3>
+            <div class="chart-container" style="height:140px;">
+              <canvas id="chartABC"></canvas>
+            </div>
+          </div>
+          <div class="chart-card" style="padding:16px;">
+            <h3>Value Distribution by ABC</h3>
+            <div class="chart-container" style="height:140px;">
+              <canvas id="chartValue"></canvas>
+            </div>
+          </div>
+          <div class="chart-card" style="padding:16px; grid-column:1/-1;">
+            <h3>XYZ Variability Spread</h3>
+            <div class="chart-container" style="height:90px;">
+              <canvas id="chartXYZ"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SEGMENTATION-BASED FORECASTING ─────────── -->
+  <div class="section-header" id="forecast">
+    <h2>Segmentation-Based Forecasting Engine</h2>
+    <div class="line"></div>
+    <span class="tag">METHOD BY SEGMENT · SBA · CROSTON · CAUSAL</span>
+  </div>
+
+  <div class="forecast-grid">
+    <div class="forecast-card">
+      <div class="fc-header">
+        <span class="fc-badge ax">AX / BX</span>
+        <span class="fc-method">Weighted Moving Average</span>
+      </div>
+      <p class="fc-description">Stable parts with CV &lt; 0.10. High value, predictable demand. Continuous automated replenishment. Min-max with tight control bands. Recent months weighted 3×.</p>
+      <div class="fc-formula">Forecast = Σ(wᵢ × Dᵢ) / Σwᵢ<br>w₁=3, w₂=2, w₃=1 (recent → older)</div>
+    </div>
+    <div class="forecast-card">
+      <div class="fc-header">
+        <span class="fc-badge az">AY / AZ</span>
+        <span class="fc-method">Exponential Smoothing</span>
+      </div>
+      <p class="fc-description">High-value parts with trend (fleet growth, new model launches). Adaptive alpha responds to MEA market signals. Monthly demand review with consensus override.</p>
+      <div class="fc-formula">Fₜ = α × Dₜ₋₁ + (1 − α) × Fₜ₋₁<br>α = 0.3 (balanced responsiveness)</div>
+    </div>
+    <div class="forecast-card">
+      <div class="fc-header">
+        <span class="fc-badge cz">BZ / CZ</span>
+        <span class="fc-method">SBA — Syntetos-Boylan</span>
+      </div>
+      <p class="fc-description">Intermittent demand parts with zero-demand months. SBA corrects Croston's systemic over-forecasting bias. Separates demand size from demand interval.</p>
+      <div class="fc-formula">F_SBA = (1 − α/2) × (Ẑ / p̂)<br>Ẑ = demand size · p̂ = demand interval</div>
+    </div>
+    <div class="forecast-card">
+      <div class="fc-header">
+        <span class="fc-badge ecanter">eCanter EV</span>
+        <span class="fc-method">Causal / Telematics-Driven</span>
+      </div>
+      <p class="fc-description">Electric FUSO eCanter parts triggered by telematics. Battery SoH below 85% or odometer above 150k km auto-generates VOR (Vehicle Off Road) demand signals.</p>
+      <div class="fc-formula">IF(mileage > 150k AND SoH &lt; 85%)<br>→ URGENT VOR demand trigger</div>
+    </div>
+    <div class="forecast-card">
+      <div class="fc-header">
+        <span class="fc-badge gpc">GPC Halberstadt</span>
+        <span class="fc-method">Bridge Stock Calculation</span>
+      </div>
+      <p class="fc-description">Germany hub transition (2026+). LT drops 45→30 days but LT variability triples (σ=2→10). Enhanced SS formula protects against volatile German supply during ramp-up.</p>
+      <div class="fc-formula">SS = Z × √(LT×σ_d² + d̄²×σ_LT²)<br>GPC result: SS triples despite shorter LT</div>
+    </div>
+    <div class="forecast-card">
+      <div class="fc-header">
+        <span class="fc-badge bx">All Classes</span>
+        <span class="fc-method">S&OP Consensus Override</span>
+      </div>
+      <p class="fc-description">Statistical baseline + commercial intelligence. Every override logged with owner, rationale, and tracking ID. Statistical vs consensus accuracy tracked separately monthly.</p>
+      <div class="fc-formula">Final = Statistical + Override<br>All overrides: owner + rationale + ID</div>
+    </div>
+  </div>
+
+  <!-- ── SUPPLY CHAIN ─────────────────────────────── -->
+  <div class="section-header" id="supply">
+    <h2>Supply Network</h2>
+    <div class="line"></div>
+    <span class="tag">JAFZA HUB · 3 SUPPLY ORIGINS · 58 MARKETS</span>
+  </div>
+
+  <div class="supply-grid">
+    <div class="supply-card">
+      <div class="flag">🇯🇵</div>
+      <h3>Japan — Primary</h3>
+      <div class="lt">45 <span>days LT</span></div>
+      <p>Highest volume. All major assemblies, engines, drivetrain components. σ_LT = 2 days (highly reliable). Accounts for ~65% of all inbound by value.</p>
+      <div class="ss-note">Z=2.05 · SS formula: standard enhanced<br>AX-Class SS: ~47 units avg</div>
+    </div>
+    <div class="supply-card">
+      <div class="flag">🇮🇳</div>
+      <h3>Chennai — Secondary</h3>
+      <div class="lt">21 <span>days LT</span></div>
+      <p>Maintenance consumables: filters, belts, fluids, hoses. Faster lead time enables responsive replenishment for high-frequency C-class parts across GCC markets.</p>
+      <div class="ss-note">Z=1.65 · Shorter LT = lower SS<br>Review period: 30 days standard</div>
+    </div>
+    <div class="supply-card" style="border-color: rgba(52,152,219,0.4);">
+      <div class="flag">🇩🇪</div>
+      <h3>GPC Halberstadt — Transition</h3>
+      <div class="lt" style="color:var(--blue-acc)">30 <span>days LT</span></div>
+      <p>Coming online 2026. Shorter LT but σ_LT = 10 days during ramp-up. Bridge stock required — enhanced SS formula essential. Variability drives 3× safety stock despite shorter lead time.</p>
+      <div class="ss-note" style="color:var(--red-bright);">⚠ LT variability triples SS vs Japan<br>Bridge stock pre-positioned at Jafza</div>
+    </div>
+  </div>
+
+  <!-- ── SMOB ─────────────────────────────────────── -->
+  <div class="section-header" id="smob">
+    <h2>SMOB Reduction Plan</h2>
+    <div class="line"></div>
+    <span class="tag">AED 6.84M LOCKED CAPITAL · TARGET &lt;5% IN 36 MONTHS</span>
+  </div>
+
+  <div class="smob-layout">
+    <div class="smob-visual">
+      <h3>3-Year Reduction Trajectory</h3>
+
+      <div style="margin-bottom:24px;">
+        <div class="smob-bar-item">
+          <div class="smob-bar-header">
+            <span class="year">Today (2026)</span>
+            <span class="val" style="color:var(--red-bright)">18% — AED 6.84M</span>
+          </div>
+          <div class="progress-track" style="height:10px;">
+            <div class="progress-bar" style="width:100%;background:var(--red-bright);"></div>
+          </div>
+        </div>
+        <div class="smob-bar-item">
+          <div class="smob-bar-header">
+            <span class="year">End 2026</span>
+            <span class="val" style="color:var(--gold)">Target 12%</span>
+          </div>
+          <div class="progress-track" style="height:10px;">
+            <div class="progress-bar" style="width:66%;background:var(--gold);"></div>
+          </div>
+        </div>
+        <div class="smob-bar-item">
+          <div class="smob-bar-header">
+            <span class="year">End 2027</span>
+            <span class="val" style="color:var(--teal)">Target 8%</span>
+          </div>
+          <div class="progress-track" style="height:10px;">
+            <div class="progress-bar" style="width:44%;background:var(--teal);"></div>
+          </div>
+        </div>
+        <div class="smob-bar-item">
+          <div class="smob-bar-header">
+            <span class="year">End 2028</span>
+            <span class="val" style="color:var(--green)">Target &lt;5% — AED 1.9M</span>
+          </div>
+          <div class="progress-track" style="height:10px;">
+            <div class="progress-bar" style="width:28%;background:var(--green);"></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:20px;" id="smob-action-grid">
+        <!-- filled by JS -->
+      </div>
+    </div>
+
+    <div>
+      <div class="smob-visual" style="margin-bottom:16px;">
+        <h3>Disposition Framework</h3>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:rgba(231,76,60,0.1); border:1px solid rgba(231,76,60,0.3); border-radius:6px;">
+            <div>
+              <div style="font-size:12px; font-weight:700; color:var(--red-bright);">SCRAP / WRITE-OFF</div>
+              <div style="font-size:11px; color:var(--text-dim);">Discontinued models, no compatible fleet remaining</div>
+            </div>
+            <div style="font-family:var(--mono); font-size:20px; color:var(--red-bright);" id="smob-scrap-count">—</div>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:rgba(243,156,18,0.1); border:1px solid rgba(243,156,18,0.3); border-radius:6px;">
+            <div>
+              <div style="font-size:12px; font-weight:700; color:var(--gold);">BUNDLE (20% Discount)</div>
+              <div style="font-size:11px; color:var(--text-dim);">Bundle with fast-moving service kits, recover value</div>
+            </div>
+            <div style="font-family:var(--mono); font-size:20px; color:var(--gold);" id="smob-bundle-count">—</div>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:rgba(26,188,156,0.1); border:1px solid rgba(26,188,156,0.3); border-radius:6px;">
+            <div>
+              <div style="font-size:12px; font-weight:700; color:var(--teal);">ROTATE (Inter-Market)</div>
+              <div style="font-size:11px; color:var(--text-dim);">Offer to 58 MEA distributors — amnesty swap programme</div>
+            </div>
+            <div style="font-family:var(--mono); font-size:20px; color:var(--teal);" id="smob-rotate-count">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="smob-visual">
+        <h3>Working Capital Recovery</h3>
+        <div style="font-family:var(--mono); font-size:36px; color:var(--green); line-height:1; margin-bottom:4px;">AED 1.75M</div>
+        <div style="font-size:11px; color:var(--text-dim);">Estimated recovery over 3-year programme</div>
+        <div style="margin-top:16px; font-size:11px; color:var(--text-dim); line-height:2;">
+          <div>No replenishment of EOL parts post-classification</div>
+          <div>Finance monthly provision: 25% SMOB risk / 75–100% confirmed obsolete</div>
+          <div>Japan HQ return-for-credit negotiated per SKU</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ROADMAP ───────────────────────────────────── -->
+  <div class="section-header" id="roadmap">
+    <h2>3-Year Transformation Roadmap</h2>
+    <div class="line"></div>
+    <span class="tag">STABILISE → OPTIMISE → EXCELLENCE</span>
+  </div>
+
+  <div class="roadmap-grid" id="roadmap-grid">
+    <!-- filled by JS -->
+  </div>
+
+  <!-- ── SKU TABLE ─────────────────────────────────── -->
+  <div class="section-header" id="skus">
+    <h2>SKU Portfolio</h2>
+    <div class="line"></div>
+    <span class="tag">50 ACTIVE SKUS · FILTERED VIEW</span>
+  </div>
+
+  <div class="sku-table-wrap">
+    <div class="table-toolbar">
+      <h3>SKU Classification &amp; Safety Stock</h3>
+      <div class="filter-group">
+        <button class="filter-btn active" data-filter="all" onclick="filterTable('all')">ALL</button>
+        <button class="filter-btn" data-filter="A" onclick="filterTable('A')">A-Class</button>
+        <button class="filter-btn" data-filter="B" onclick="filterTable('B')">B-Class</button>
+        <button class="filter-btn" data-filter="C" onclick="filterTable('C')">C-Class</button>
+        <button class="filter-btn" data-filter="smob" onclick="filterTable('smob')">SMOB</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto; max-height:480px; overflow-y:auto;">
+      <table id="sku-table">
+        <thead>
+          <tr>
+            <th>Part Number</th>
+            <th>Description</th>
+            <th>Model</th>
+            <th>ABC</th>
+            <th>XYZ</th>
+            <th>Combined</th>
+            <th>CV</th>
+            <th>Annual Value</th>
+            <th>SS (Units)</th>
+            <th>Strategy</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="sku-tbody">
+          <!-- filled by JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <div class="credits">FUSO MEA Executive Dashboard · DSV Logistics · Jafza Free Zone, Dubai · Built: <span id="build-date">—</span></div>
+  <div class="disclaimer">Confidential — Interview Presentation Material — Vinayak Bhadani</div>
+</footer>
+
+<div class="cell-tooltip" id="cell-tooltip"></div>
+
+<script>
+// ─── DATA LOADING ────────────────────────────────────────────────────────────
+let D = null;
+let allSkus = [];
+let currentFilter = 'all';
+
+async function loadData() {
+  try {
+    // Try fetching JSON (GitHub Pages / server)
+    const res = await fetch('data/dashboard_data.json');
+    if (!res.ok) throw new Error('fetch failed');
+    D = await res.json();
+  } catch {
+    // Fallback: embedded data (for file:// protocol)
+    console.warn('Fetch failed — using embedded data placeholder');
+    D = null;
+  }
+
+  if (!D) {
+    document.getElementById('loading').innerHTML =
+      '<p style="color:#E74C3C;font-family:monospace;text-align:center;padding:40px;">ERROR: Could not load dashboard_data.json<br><br>Run: <code>python3 scripts/build.py</code><br>Then serve with: <code>python3 -m http.server 8080</code></p>';
+    return;
+  }
+
+  document.getElementById('loading').style.display = 'none';
+  render();
+}
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+function render() {
+  renderKPIs();
+  renderMatrix();
+  renderCharts();
+  renderSMOB();
+  renderRoadmap();
+  renderSKUTable(D.all_skus);
+  renderMeta();
+  initNavHighlight();
+}
+
+function pct(v) { return Math.round(v * 100) + '%'; }
+function aed(v) { return 'AED ' + (v >= 1e6 ? (v/1e6).toFixed(1) + 'M' : v.toLocaleString()); }
+
+// ─── KPIs ────────────────────────────────────────────────────────────────────
+function renderKPIs() {
+  const k = D.kpis;
+
+  // Forecast accuracy
+  document.getElementById('kpi-fa').textContent = pct(k.forecast_accuracy_current);
+  document.getElementById('kpi-fa-target').textContent = pct(k.forecast_accuracy_target);
+  document.getElementById('kpi-fa-gap').textContent = '+' + Math.round((k.forecast_accuracy_target - k.forecast_accuracy_current) * 100) + 'pp needed';
+  setTimeout(() => {
+    document.getElementById('pb-fa').style.width = (k.forecast_accuracy_current * 100) + '%';
+  }, 200);
+
+  // Fill rate
+  document.getElementById('kpi-fr').textContent = pct(k.fill_rate_current);
+  document.getElementById('kpi-fr-target').textContent = pct(k.fill_rate_target);
+  document.getElementById('kpi-fr-gap').textContent = '+' + Math.round((k.fill_rate_target - k.fill_rate_current) * 100) + 'pp needed';
+  setTimeout(() => {
+    document.getElementById('pb-fr').style.width = (k.fill_rate_current * 100) + '%';
+  }, 200);
+
+  // SMOB
+  document.getElementById('kpi-smob').textContent = pct(k.smob_pct_current);
+  document.getElementById('kpi-smob-target').textContent = '<' + pct(k.smob_pct_target);
+  document.getElementById('kpi-smob-aed').textContent = aed(k.smob_value_aed);
+  setTimeout(() => {
+    document.getElementById('pb-smob').style.width = (k.smob_pct_current * 100) + '%';
+  }, 200);
+
+  // Portfolio
+  document.getElementById('kpi-portfolio').textContent = aed(k.portfolio_value_aed);
+  document.getElementById('kpi-skus').textContent = D.meta.total_skus + ' SKUs';
+  document.getElementById('kpi-markets').textContent = D.meta.markets;
+  setTimeout(() => {
+    document.getElementById('pb-port').style.width = '78%';
+  }, 200);
+}
+
+// ─── ABC-XYZ MATRIX ──────────────────────────────────────────────────────────
+const MATRIX_CONFIG = {
+  AX: { color: 'cell-AX', strategy: 'Min-Max\nContinuous Review', priority: '★★★ PRIORITY' },
+  AY: { color: 'cell-AY', strategy: 'Periodic Review\n(R,S) Policy', priority: '★★★ PRIORITY' },
+  AZ: { color: 'cell-AZ', strategy: 'Demand Sensing\n+ Buffer Stock', priority: '★★★ PRIORITY' },
+  BX: { color: 'cell-BX', strategy: 'Kanban /\nFixed Period', priority: '★★ MONITOR' },
+  BY: { color: 'cell-BY', strategy: 'Periodic Review\nQuarterly', priority: '★★ MONITOR' },
+  BZ: { color: 'cell-BZ', strategy: 'Order-on-Demand\n+ Emergency Stock', priority: '★★ MONITOR' },
+  CX: { color: 'cell-CX', strategy: 'Min-Max Light\nAnnual Review', priority: '★ STANDARD' },
+  CY: { color: 'cell-CY', strategy: 'Periodic Review\nAnnual', priority: '★ STANDARD' },
+  CZ: { color: 'cell-CZ', strategy: 'SMOB Candidate\nOrder-on-Demand', priority: '⚠ SMOB RISK' },
+};
+
+function renderMatrix() {
+  const grid = document.getElementById('matrix-grid');
+  const cm = D.combined_matrix;
+  const order = ['AX','AY','AZ','BX','BY','BZ','CX','CY','CZ'];
+
+  grid.innerHTML = order.map(key => {
+    const count = cm[key] || 0;
+    const cfg = MATRIX_CONFIG[key];
+    return `
+      <div class="matrix-cell ${cfg.color}"
+           onmouseenter="showTooltip(event,'${key}',${count},'${cfg.strategy.replace(/\n/g,' | ')}','${cfg.priority}')"
+           onmouseleave="hideTooltip()">
+        <div class="cell-label">${key}</div>
+        <div class="cell-count">${count} <span>SKUs</span></div>
+        <div class="cell-strategy">${cfg.strategy.replace(/\n/g,'<br>')}</div>
+      </div>`;
+  }).join('');
+}
+
+// ─── CHARTS ──────────────────────────────────────────────────────────────────
+let charts = {};
+
+function renderCharts() {
+  const abc = D.abc_analysis;
+  const xyz = D.xyz_analysis;
+
+  const chartDefaults = {
+    plugins: { legend: { labels: { color: '#95A5A6', font: { size: 10 } } } },
+    scales: {},
+  };
+
+  // ABC Doughnut
+  charts.abc = new Chart(document.getElementById('chartABC'), {
+    type: 'doughnut',
+    data: {
+      labels: ['A-Class', 'B-Class', 'C-Class'],
+      datasets: [{
+        data: [abc.counts.A, abc.counts.B, abc.counts.C],
+        backgroundColor: ['#27AE60', '#3498DB', '#7F8C8D'],
+        borderWidth: 0,
+      }]
+    },
+    options: {
+      plugins: { legend: { position: 'right', labels: { color: '#95A5A6', font: { size: 10 }, padding: 8 } } },
+      cutout: '65%',
+      maintainAspectRatio: false,
+    }
+  });
+
+  // Value Bar
+  charts.val = new Chart(document.getElementById('chartValue'), {
+    type: 'bar',
+    data: {
+      labels: ['A', 'B', 'C'],
+      datasets: [{
+        data: [abc.pct_value.A, abc.pct_value.B, abc.pct_value.C],
+        backgroundColor: ['#27AE60', '#3498DB', '#7F8C8D'],
+        borderRadius: 4,
+        borderWidth: 0,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#7F8C8D', font: { size: 9 }, callback: v => v + '%' }, grid: { color: 'rgba(255,255,255,0.05)' }, max: 100 },
+        y: { ticks: { color: '#95A5A6', font: { size: 10 } }, grid: { display: false } },
+      },
+      maintainAspectRatio: false,
+    }
+  });
+
+  // XYZ Horizontal Bar
+  charts.xyz = new Chart(document.getElementById('chartXYZ'), {
+    type: 'bar',
+    data: {
+      labels: ['X (Stable)', 'Y (Variable)', 'Z (Intermittent)'],
+      datasets: [{
+        label: 'SKU Count',
+        data: [xyz.counts.X, xyz.counts.Y, xyz.counts.Z],
+        backgroundColor: ['#1ABC9C', '#F39C12', '#E74C3C'],
+        borderRadius: 4,
+        borderWidth: 0,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#7F8C8D', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
+        y: { ticks: { color: '#95A5A6', font: { size: 10 } }, grid: { display: false } },
+      },
+      maintainAspectRatio: false,
+    }
+  });
+}
+
+// ─── SMOB ─────────────────────────────────────────────────────────────────────
+function renderSMOB() {
+  const s = D.smob_summary;
+  document.getElementById('smob-scrap-count').textContent = s.by_action.SCRAP + ' parts';
+  document.getElementById('smob-bundle-count').textContent = s.by_action.BUNDLE + ' parts';
+  document.getElementById('smob-rotate-count').textContent = s.by_action.ROTATE + ' parts';
+}
+
+// ─── ROADMAP ──────────────────────────────────────────────────────────────────
+function renderRoadmap() {
+  const r = D.roadmap;
+  const years = [
+    { key: 'year1', cls: 'y1', data: r.year1 },
+    { key: 'year2', cls: 'y2', data: r.year2 },
+    { key: 'year3', cls: 'y3', data: r.year3 },
+  ];
+  document.getElementById('roadmap-grid').innerHTML = years.map(({ cls, data }) => `
+    <div class="roadmap-card ${cls}">
+      <span class="year-badge">${data.label}</span>
+      <div class="targets">
+        <div class="target-item">
+          <div class="t-val">${Math.round(data.forecast_target * 100)}%</div>
+          <div class="t-label">FORECAST ACC.</div>
+        </div>
+        <div class="target-item">
+          <div class="t-val">${Math.round(data.fill_rate_target * 100)}%</div>
+          <div class="t-label">FILL RATE</div>
+        </div>
+      </div>
+      <ul>${data.milestones.map(m => `<li>${m}</li>`).join('')}</ul>
+    </div>`).join('');
+}
+
+// ─── SKU TABLE ────────────────────────────────────────────────────────────────
+function renderSKUTable(skus) {
+  allSkus = skus;
+  filterTable(currentFilter);
+}
+
+function filterTable(filter) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.filter === filter);
+  });
+
+  let filtered = allSkus;
+  if (filter === 'smob') {
+    filtered = allSkus.filter(s => s.smob_flag);
+  } else if (filter !== 'all') {
+    filtered = allSkus.filter(s => s.abc === filter);
+  }
+
+  const fmt = v => v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v.toFixed(0);
+
+  document.getElementById('sku-tbody').innerHTML = filtered.map(s => `
+    <tr>
+      <td class="mono-val" style="font-size:11px;">${s.pn}</td>
+      <td>${s.desc}</td>
+      <td style="font-size:11px; color:var(--text-dim);">${s.model}</td>
+      <td><span class="badge badge-${s.abc}">${s.abc}</span></td>
+      <td><span class="badge badge-${s.xyz}">${s.xyz}</span></td>
+      <td><span class="badge badge-${s.abc}" style="letter-spacing:0;">${s.combined}</span></td>
+      <td class="mono-val" style="font-size:11px;">${s.cv.toFixed(2)}</td>
+      <td class="mono-val">AED ${fmt(s.annual_value_aed)}</td>
+      <td class="mono-val">${s.ss_enhanced}</td>
+      <td style="font-size:10px; color:var(--text-dim);">${s.strategy}</td>
+      <td>${s.smob_flag ? `<span class="badge badge-smob">${s.smob_status}</span>` : `<span style="color:var(--green);font-size:11px;">ACTIVE</span>`}</td>
+    </tr>`).join('');
+}
+
+// ─── META ─────────────────────────────────────────────────────────────────────
+function renderMeta() {
+  const d = new Date(D.meta.generated_at);
+  const fmt = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) +
+              ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + ' UTC';
+  document.getElementById('last-updated').textContent = 'Updated: ' + fmt;
+  document.getElementById('build-date').textContent = fmt;
+}
+
+// ─── TOOLTIP ──────────────────────────────────────────────────────────────────
+function showTooltip(e, key, count, strategy, priority) {
+  const t = document.getElementById('cell-tooltip');
+  t.innerHTML = `<strong style="font-family:var(--mono);font-size:14px;">${key}</strong><br>
+    <span style="color:var(--text-dim);">${count} SKUs</span><br>
+    <span style="color:var(--gold);font-size:10px;">${priority}</span><br>
+    <span style="color:var(--text-dim);">${strategy}</span>`;
+  t.style.display = 'block';
+  t.style.left = (e.clientX + 12) + 'px';
+  t.style.top = (e.clientY - 10) + 'px';
+}
+function hideTooltip() {
+  document.getElementById('cell-tooltip').style.display = 'none';
+}
+
+// ─── NAV HIGHLIGHT ────────────────────────────────────────────────────────────
+function initNavHighlight() {
+  const sections = document.querySelectorAll('[id]');
+  const navLinks = document.querySelectorAll('nav a');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const link = document.querySelector(`nav a[href="#${e.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  sections.forEach(s => obs.observe(s));
+}
+
+// ─── BOOT ─────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', loadData);
+</script>
+</body>
+</html>
